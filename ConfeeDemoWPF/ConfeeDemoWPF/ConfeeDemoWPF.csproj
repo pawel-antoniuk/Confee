@@ -116,7 +116,7 @@
     <Compile Include="BitmapLoader.cs" />
     <Compile Include="GestureClassifier.cs" />
     <Compile Include="GestureDatabase.cs" />
-    <Compile Include="KinectGestureRecognizer.cs" />
+    <Compile Include="GestureRecognizer.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
