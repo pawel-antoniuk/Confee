@@ -1,0 +1,45 @@
+﻿<Page
+    x:Class="Confee.LoginPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Confee"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Page.Transitions>
+        <TransitionCollection>
+            <NavigationThemeTransition>
+                <NavigationThemeTransition.DefaultNavigationTransitionInfo>
+                    <SlideNavigationTransitionInfo/>
+                </NavigationThemeTransition.DefaultNavigationTransitionInfo>
+            </NavigationThemeTransition>
+        </TransitionCollection>
+    </Page.Transitions>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="0*"/>
+        </Grid.RowDefinitions>
+        <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"  Height="311" Width="204" >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="5*"/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+
+            <Image Source="Assets/confeelogo.png" Grid.Row="0"/>
+            <TextBlock Text="Username" Grid.Row="1" VerticalAlignment="Bottom"/>
+            <TextBlock Text="Password" Grid.Row="3" VerticalAlignment="Bottom"/>
+            <TextBox Grid.Row="2"/>
+            <PasswordBox Grid.Row="4"/>
+            <Button Content="Login" Grid.Row="5" HorizontalAlignment="Right" VerticalAlignment="Bottom" Click="Button_Click"/>
+        </Grid>
+        <Path Data="M1921,967 L1922,1085 L802.498,1050" Fill="#FFF47427" Margin="2,-113,-2,-5" Stretch="Fill" UseLayoutRounding="False" Grid.Row="1" d:LayoutOverrides="LeftPosition, RightPosition, TopPosition, BottomPosition"/>
+        <Path Data="M-2.66899,1080.83 L-3.00232,982.016 L1922.48,1080.17" Fill="#9c7ab6" Margin="-3,-98,-0.564,-0.833" Grid.Row="1" Stretch="Fill" UseLayoutRounding="False" d:LayoutOverrides="LeftPosition, RightPosition, TopPosition, BottomPosition"/>
+    </Grid>
+</Page>
