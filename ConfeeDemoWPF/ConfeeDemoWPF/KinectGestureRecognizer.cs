@@ -27,7 +27,7 @@ namespace ConfeeDemoWPF
         public IntPtr LeftHandFrame { get; set; }
     }
 
-    class KinectGestureRecognizer
+    class GestureRecognizer
     {
         private struct HandDimensions
         {
@@ -68,7 +68,7 @@ namespace ConfeeDemoWPF
         public event EventHandler<GestureRecognizedArgs> GestureRecognized;
         public event EventHandler<PreviewFrameArrivedArgs> PreviewFrameArrived;
         //public GestureDatabase GestureDatabase => _gestureDatabase; //old version
-        public KinectGestureRecognizer(KinectSensor sensor, string databasePath)
+        public GestureRecognizer(KinectSensor sensor, string databasePath)
         {
             _kinectSensor = sensor;
             _coordinateMapper = _kinectSensor.CoordinateMapper;

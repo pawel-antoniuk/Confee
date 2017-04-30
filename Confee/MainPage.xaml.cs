@@ -76,18 +76,14 @@ namespace Confee
                 {
                     foreach (var sourceInfo in sourceGroup.SourceInfos)
                     {
-                        if (sourceInfo.MediaStreamType == MediaStreamType.VideoRecord &&
-                            sourceInfo.SourceKind == MediaFrameSourceKind.Color)
-                        {
-                            colorSourceInfo = sourceInfo;
-                            break;
-                        }
-                    }
-                    if (colorSourceInfo != null)
-                    {
-                        selectedGroup = sourceGroup;
+                        if (sourceInfo.MediaStreamType != MediaStreamType.VideoRecord ||
+                            sourceInfo.SourceKind != MediaFrameSourceKind.Color) continue;
+                        colorSourceInfo = sourceInfo;
                         break;
                     }
+                    if (colorSourceInfo == null) continue;
+                    selectedGroup = sourceGroup;
+                    break;
                 }
 
                 var settings = new MediaCaptureInitializationSettings()

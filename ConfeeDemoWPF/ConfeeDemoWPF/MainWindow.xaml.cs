@@ -38,7 +38,7 @@ namespace ConfeeDemoWPF
         private WriteableBitmap _rightHandColorBitmapSource;
         private WriteableBitmap _leftHandColorBitmapSource;
         private CoordinateMapper _coordinateMapper;
-        private KinectGestureRecognizer _gestureRecognizer;
+        private GestureRecognizer _gestureRecognizer;
 
         private int _colorViewWidth = 256;
         private int _colorViewHeight = 256;
@@ -62,8 +62,8 @@ namespace ConfeeDemoWPF
             _coordinateMapper = _kinect.CoordinateMapper;
             var depthFrameDesc = _kinect.DepthFrameSource.FrameDescription;
 
-            _gestureRecognizer = new KinectGestureRecognizer(_kinect,
-                @"C:\Users\user\Documents\svmtst\classifier2.bin");
+            _gestureRecognizer = new GestureRecognizer(_kinect,
+                @"..\..\..\..\Gestures\classifier2.bin");
             _gestureRecognizer.GestureRecognized += OnGestureRecognized;
             _gestureRecognizer.PreviewFrameArrived += PreviewFrameArrived;
             //_gestureRecognizer.GestureDatabase.CleanDatabase();
@@ -99,7 +99,7 @@ namespace ConfeeDemoWPF
                     _snapNextTime = false;
                     //old version
                     //_gestureRecognizer.GestureDatabase.SaveGesture(args.RightHandFrame, "debug");
-                    var libraryPath = @"C:\Users\user\Documents\svmtst\gestures2";
+                    var libraryPath = @"..\..\..\..\Gestures\gestures2";
                     var label = _labelTextBox.Text;
                     BitmapLoader.SaveInLibrary(libraryPath, label, args.RightHandFrame,
                         _gestureRecognizer.DepthFrameWidth, _gestureRecognizer.DepthFrameHeight,
@@ -124,9 +124,9 @@ namespace ConfeeDemoWPF
         }
 
         //private Timer _gestureRecognizedTimer = null;
-        private const string _textToSpeach = "Hello,My,Name is,P,A,W,E,L,Ok";
-        private int _wordIndex = 100;
-        private DateTime _lastGestureRecognizedTime;
+        //private const string _textToSpeach = "Hello,My,Name is,P,A,W,E,L,Ok";
+        //private int _wordIndex = 100;
+        //private DateTime _lastGestureRecognizedTime;
         //private bool _isSpeechCompleted = true;
 
         private async void OnGestureRecognized(object e, GestureRecognizedArgs args)
@@ -276,7 +276,7 @@ namespace ConfeeDemoWPF
 
         private void CheckBox_Checked(object sender, RoutedEventArgs e)
         {
-            var checkBox = (CheckBox)sender;
+            /*var checkBox = (CheckBox)sender;
             if (checkBox.IsChecked.Value)
             {
                 _wordIndex = 10000;
@@ -284,7 +284,7 @@ namespace ConfeeDemoWPF
             else
             {
                 _wordIndex = 0;
-            }
+            }*/
         }
     }
 }
