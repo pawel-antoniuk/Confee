@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ConfeeDemoWPF"
         mc:Ignorable="d"
-        Title="Confee demo 0.2" Height="320" Width="256">
+        Title="Confee demo 0.2" Height="340" Width="256">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="128"/>
@@ -15,6 +15,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="128"/>
             <RowDefinition Height="128"/>
+            <RowDefinition/>
             <RowDefinition/>
         </Grid.RowDefinitions>
 
@@ -34,5 +35,7 @@
         
         <CheckBox Grid.Row="2" Grid.Column="1" HorizontalAlignment="Right" Margin="0,18,0,0" Checked="CheckBox_Checked"/>
         <TextBlock Name="_textBlock" Grid.Row="2" Grid.Column="0" FontSize="20" TextWrapping="Wrap" />
+        <Label Content="Accuracy" Grid.Row="3" Grid.Column="0"/>
+        <Label Name="_accuracyLabel" Grid.Row="3" Grid.Column="1"/>
     </Grid>
 </Window>

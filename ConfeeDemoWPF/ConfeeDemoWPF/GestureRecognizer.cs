@@ -19,6 +19,7 @@ namespace ConfeeDemoWPF
         public IntPtr GestureImagePointer { get; set; }
         public ulong TrackingId { get; set; }
         public bool IsEventCaptured { get; set; }
+        public double Accuracy { get; set; }
     }
 
     public class PreviewFrameArrivedArgs
@@ -191,18 +192,15 @@ namespace ConfeeDemoWPF
                 CvInvoke.FindContours(inputImageCopy, contours, null /*hierarchy*/, RetrType.List, ChainApproxMethod.ChainApproxNone);
                 int contoursIndex = 0;
 
-                unsafe
+                int maxArea = 0;
+                for (int i = 0; i < contours.Size; ++i)
                 {
-                    int maxArea = 0;
-                    for (int i = 0; i < contours.Size; ++i)
+                    var rect = CvInvoke.BoundingRectangle(contours[i]);
+                    var area = rect.Width * rect.Height;
+                    if (area > maxArea)
                     {
-                        var rect = CvInvoke.BoundingRectangle(contours[i]);
-                        var area = rect.Width * rect.Height;
-                        if (area > maxArea)
-                        {
-                            maxArea = area;
-                            contoursIndex = i;
-                        }
+                        maxArea = area;
+                        contoursIndex = i;
                     }
                 }
 
@@ -335,6 +333,7 @@ namespace ConfeeDemoWPF
                     GestureImagePointer = frame.RightHandFrame,
                     TrackingId = trackedBodyId,
                     IsEventCaptured = false,
+                    Accuracy = maxDensity,
                 };
                 GestureRecognized(this, args);
                 if (args.IsEventCaptured)

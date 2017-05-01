@@ -183,6 +183,7 @@ namespace ConfeeDemoWPF
             await Dispatcher.BeginInvoke(new Action(() =>
             {
                 _textBlock.Text = args.GestureName;
+                _accuracyLabel.Content = args.Accuracy.ToString("F");
             }));
         }
 
@@ -256,10 +257,10 @@ namespace ConfeeDemoWPF
                 _gestureRecognizer.InputFrames(depthFrame, trackedBody);
 
                 // draw color frames
-                var rightHandJoint = trackedBody.Joints.Single(s => s.Key == JointType.HandRight).Value;
+                /*var rightHandJoint = trackedBody.Joints.Single(s => s.Key == JointType.HandRight).Value;
                 var leftHandJoint = trackedBody.Joints.Single(s => s.Key == JointType.HandLeft).Value;
                 DrawJointNearestArea(rightHandJoint, colorFrame, _rightHandColorBitmapSource);
-                DrawJointNearestArea(leftHandJoint, colorFrame, _leftHandColorBitmapSource);
+                DrawJointNearestArea(leftHandJoint, colorFrame, _leftHandColorBitmapSource);*/
             }
             finally
             {
