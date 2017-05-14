@@ -59,24 +59,28 @@ namespace ConfeeDemoWPF
         public int DepthFrameWidth => 128;
         public int DepthFrameHeight => 128;
 
-        private CoordinateMapper _coordinateMapper;
-        private KinectSensor _kinectSensor;
+        private readonly CoordinateMapper _coordinateMapper;
+        private readonly KinectSensor _kinectSensor;
         //private GestureDatabase _gestureDatabase; //old version
-        private GestureClassifier _classifier;
+        private readonly GestureClassifier _classifier;
         private string _lastGestureName = "";
-        private double[] _gestureDensity;
+        private readonly double[] _gestureDensity;
 
         public event EventHandler<GestureRecognizedArgs> GestureRecognized;
         public event EventHandler<PreviewFrameArrivedArgs> PreviewFrameArrived;
         //public GestureDatabase GestureDatabase => _gestureDatabase; //old version
-        public GestureRecognizer(KinectSensor sensor, string databasePath)
+        public GestureRecognizer(KinectSensor sensor, string databasePath, bool relearn)
         {
             _kinectSensor = sensor;
             _coordinateMapper = _kinectSensor.CoordinateMapper;
-            //_classifier = GestureClassifier.Learn(@"C:\Users\user\Documents\svmtst\gestures2");
-            //_classifier.Save(databasePath);
 
-            _classifier = GestureClassifier.Load(databasePath);
+            if (relearn)
+            {
+                _classifier = GestureClassifier.Learn(databasePath + "\\gestures");
+                _classifier.Save(databasePath + "\\classifier.bin");
+            }
+
+            _classifier = GestureClassifier.Load(databasePath + "\\classifier.bin");
 
             _gestureDensity = new double[_classifier.Labels.Count];
 

@@ -11,7 +11,7 @@ namespace ConfeeDemoWPF
 {
     static class BitmapLoader
     {
-        private static Random _random = new Random();
+        private static readonly Random Random = new Random();
 
         public static Dictionary<string, List<Bitmap>> LoadLibrary(string pathStr)
         {
@@ -41,7 +41,7 @@ namespace ConfeeDemoWPF
             int width, int height, int stride, PixelFormat format)
         {
             var bitmap = new Bitmap(width, height, stride, format, data);
-            var outputPath = pathStr + "\\" + label + "\\" + _random.Next() + ".bmp";
+            var outputPath = pathStr + "\\" + label + "\\" + Random.Next() + ".bmp";
             bitmap.Save(outputPath, ImageFormat.Bmp);
         }
     }

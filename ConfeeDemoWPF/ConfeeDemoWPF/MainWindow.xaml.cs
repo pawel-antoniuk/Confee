@@ -17,13 +17,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using PixelFormat = System.Drawing.Imaging.PixelFormat;
 
-/* pomysły
- * wykrywać palce jako "punkty skupienia". punkty skupienia mają większe znaczenie przy porównywaniu
- * obszary które często się powtarzają mają mniejszą wartość.
- * porównywać głębie
- * wyznaczać wektor głebi
- */
-
 namespace ConfeeDemoWPF
 {
     public partial class MainWindow : Window
@@ -31,52 +24,52 @@ namespace ConfeeDemoWPF
         [DllImport("kernel32.dll", SetLastError = true, EntryPoint = "CopyMemory")]
         public static extern void CopyMemory(IntPtr destination, IntPtr source, uint length);
 
-        private KinectSensor _kinect;
-        private MultiSourceFrameReader _reader;
-        private WriteableBitmap _rightHandBitmapSource;
-        private WriteableBitmap _leftHandBitmapSource;
+        private readonly KinectSensor _kinect;
+        private readonly MultiSourceFrameReader _reader;
+        private readonly WriteableBitmap _rightHandBitmapSource;
+        private readonly WriteableBitmap _leftHandBitmapSource;
         private WriteableBitmap _rightHandColorBitmapSource;
         private WriteableBitmap _leftHandColorBitmapSource;
-        private CoordinateMapper _coordinateMapper;
-        private GestureRecognizer _gestureRecognizer;
+        private readonly CoordinateMapper _coordinateMapper;
+        private readonly GestureRecognizer _gestureRecognizer;
+        private readonly SpeechRecognizer _speechRecognizer;
 
         private int _colorViewWidth = 256;
         private int _colorViewHeight = 256;
 
         private bool _snapNextTime = false;
         private Random _random = new Random();
-        private SpeechSynthesizer _synth = new SpeechSynthesizer();
+        private readonly SpeechSynthesizer _synth = new SpeechSynthesizer();
 
-        private TcpListener _listener;
-        private Socket _client;
+        private readonly Socket _client;
 
         public MainWindow()
         {
             InitializeComponent();
 
-            _listener = new TcpListener(IPAddress.Any, 6667);
-            _listener.Start();
-            _client = _listener.AcceptSocket();
+            var listener = new TcpListener(IPAddress.Any, 6667);
+            listener.Start();
+            _client = listener.AcceptSocket();
 
             _kinect = KinectSensor.GetDefault();
             _coordinateMapper = _kinect.CoordinateMapper;
             var depthFrameDesc = _kinect.DepthFrameSource.FrameDescription;
 
             _gestureRecognizer = new GestureRecognizer(_kinect,
-                @"..\..\..\..\Gestures\classifier2.bin");
+                @"..\..\..\..\Gestures", false);
             _gestureRecognizer.GestureRecognized += OnGestureRecognized;
             _gestureRecognizer.PreviewFrameArrived += PreviewFrameArrived;
             //_gestureRecognizer.GestureDatabase.CleanDatabase();
 
-            _rightHandView.Source = _rightHandBitmapSource = new WriteableBitmap(
+            RightHandView.Source = _rightHandBitmapSource = new WriteableBitmap(
                 _gestureRecognizer.DepthFrameWidth, _gestureRecognizer.DepthFrameHeight,
                 96.0, 96.0, PixelFormats.Gray8, null);
-            _leftHandView.Source = _leftHandBitmapSource = new WriteableBitmap(
+            LeftHandView.Source = _leftHandBitmapSource = new WriteableBitmap(
                 _gestureRecognizer.DepthFrameWidth, _gestureRecognizer.DepthFrameHeight,
                 96.0, 96.0, PixelFormats.Gray8, null);
-            _rightHandColorView.Source = _rightHandColorBitmapSource = new WriteableBitmap(_colorViewWidth, _colorViewHeight,
+            RightHandColorView.Source = _rightHandColorBitmapSource = new WriteableBitmap(_colorViewWidth, _colorViewHeight,
                 96.0, 96.0, PixelFormats.Bgr32, null);
-            _leftHandColorView.Source = _leftHandColorBitmapSource = new WriteableBitmap(_colorViewWidth, _colorViewHeight,
+            LeftHandColorView.Source = _leftHandColorBitmapSource = new WriteableBitmap(_colorViewWidth, _colorViewHeight,
                 96.0, 96.0, PixelFormats.Bgr32, null);
             _reader = _kinect.OpenMultiSourceFrameReader(
                 FrameSourceTypes.Body |
@@ -85,9 +78,24 @@ namespace ConfeeDemoWPF
 
             _synth.Rate = 1;
 
-
             _reader.MultiSourceFrameArrived += _reader_MultiSourceFrameArrived;
             _kinect.Open();
+
+            var audioStream = _kinect.AudioSource.AudioBeams[0].OpenInputStream();
+            _speechRecognizer = new SpeechRecognizer(audioStream);
+            _speechRecognizer.SpeechRecognized += _speechRecognizer_SpeechRecognized;
+        }
+
+        private void _speechRecognizer_SpeechRecognized(object sender, string e)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                SpeechText.Content = e;
+            }));
+        }
+
+        private void WindowLoaded(object sender, RoutedEventArgs e)
+        {
         }
 
         private void PreviewFrameArrived(object sender, PreviewFrameArrivedArgs args)
@@ -182,8 +190,8 @@ namespace ConfeeDemoWPF
 
             await Dispatcher.BeginInvoke(new Action(() =>
             {
-                _textBlock.Text = args.GestureName;
-                _accuracyLabel.Content = args.Accuracy.ToString("F");
+                TextBlock.Text = args.GestureName;
+                AccuracyLabel.Content = args.Accuracy.ToString("F");
             }));
         }
 
@@ -224,12 +232,12 @@ namespace ConfeeDemoWPF
             target.Unlock();
         }
 
-        // TODO multithread
         private void _reader_MultiSourceFrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
         {
             DepthFrame depthFrame = null;
             BodyFrame bodyFrame = null;
             ColorFrame colorFrame = null;
+
             try
             {
                 var frame = e.FrameReference.AcquireFrame();
@@ -273,19 +281,6 @@ namespace ConfeeDemoWPF
         private void _button_Click(object sender, RoutedEventArgs e)
         {
             _snapNextTime = true;
-        }
-
-        private void CheckBox_Checked(object sender, RoutedEventArgs e)
-        {
-            /*var checkBox = (CheckBox)sender;
-            if (checkBox.IsChecked.Value)
-            {
-                _wordIndex = 10000;
-            }
-            else
-            {
-                _wordIndex = 0;
-            }*/
         }
     }
 }

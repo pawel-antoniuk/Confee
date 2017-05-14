@@ -1,0 +1,60 @@
+﻿<grammar version="1.0" xml:lang="en-US" root="rootRule" tag-format="semantics/1.0-literals" xmlns="http://www.w3.org/2001/06/grammar">
+  <rule id="rootRule">
+    <one-of>
+      <item>
+        <tag>HELLO</tag>
+        <one-of>
+          <item> hello </item>
+        </one-of>
+      </item>
+      <item>
+        <tag>MY</tag>
+        <one-of>
+          <item> my </item>
+        </one-of>
+      </item>
+      <item>
+        <tag>NAME</tag>
+        <one-of>
+          <item> name </item>
+        </one-of>
+      </item>
+      <item>
+        <tag>IS</tag>
+        <one-of>
+          <item> is </item>
+        </one-of>
+      </item>
+      <item>
+        <tag>P</tag>
+        <one-of>
+          <item> p </item>
+        </one-of>
+      </item>
+      <item>
+        <tag>A</tag>
+        <one-of>
+          <item> a </item>
+        </one-of>
+      </item>
+      <item>
+        <tag>W</tag>
+        <one-of>
+          <item> w </item>
+        </one-of>
+      </item>
+      <item>
+        <tag>E</tag>
+        <one-of>
+          <item> e </item>
+        </one-of>
+      </item>
+      <item>
+        <tag>L</tag>
+        <one-of>
+          <item> l </item>
+        </one-of>
+      </item>
+    </one-of>
+  </rule>
+</grammar>

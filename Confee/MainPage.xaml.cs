@@ -49,17 +49,12 @@ namespace Confee
             {
                 _client = new StreamSocket();
                 await _client.ConnectAsync(new HostName("127.0.0.1"), "6667");
-                var isLoopRunning = true;
-                while (isLoopRunning)
+                while (true)
                 {
                     var len = await _client.InputStream.AsStreamForRead().ReadAsync(_readBuffer, 0, _readBuffer.Length);
                     await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, delegate
                     {
                         var msg = Encoding.UTF8.GetString(_readBuffer, 0, len);
-                        if(msg == "pawel")
-                        {
-                            isLoopRunning = false;
-                        }
                         _speechBalloon.Text += msg + " ";
                     });
                 }
@@ -106,6 +101,9 @@ namespace Confee
                 _frameReader.FrameArrived += FrameArrivedAsync;
                 await _frameReader.StartAsync();
             }).Start();
+
+            //var sr = new SpeechRecognizer();
+           // sr.Setup();
         }
 
         private void _datagramSocket_MessageReceived(DatagramSocket sender,

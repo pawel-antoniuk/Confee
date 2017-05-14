@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ConfeeDemoWPF"
         mc:Ignorable="d"
-        Title="Confee demo 0.2" Height="340" Width="256">
+        Title="Confee demo 0.2" Height="380" Width="256"
+        Loaded="WindowLoaded">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="128"/>
@@ -17,12 +18,13 @@
             <RowDefinition Height="128"/>
             <RowDefinition/>
             <RowDefinition/>
+            <RowDefinition/>
         </Grid.RowDefinitions>
 
-        <Image Name="_leftHandView" Grid.Column="0" Grid.Row="0"/>
-        <Image Name="_rightHandView" Grid.Column="1" Grid.Row="0"/>
-        <Image Name="_leftHandColorView" Grid.Column="0" Grid.Row="1"/>
-        <Image Name="_rightHandColorView" Grid.Column="1" Grid.Row="1"/>
+        <Image Name="LeftHandView" Grid.Column="0" Grid.Row="0"/>
+        <Image Name="RightHandView" Grid.Column="1" Grid.Row="0"/>
+        <Image Name="LeftHandColorView" Grid.Column="0" Grid.Row="1"/>
+        <Image Name="RightHandColorView" Grid.Column="1" Grid.Row="1"/>
 
         <Grid Grid.Row="2" Grid.Column="1">
             <Grid.ColumnDefinitions>
@@ -32,10 +34,12 @@
             <Button Visibility="Visible" Name="_button" Content="Snap" Grid.Column="1" Click="_button_Click"/>
             <TextBox Grid.Column="0" Name="_labelTextBox"/>
         </Grid>
+        <TextBlock Name="TextBlock" Grid.Row="2" Grid.Column="0" FontSize="20" TextWrapping="Wrap" />
         
-        <CheckBox Grid.Row="2" Grid.Column="1" HorizontalAlignment="Right" Margin="0,18,0,0" Checked="CheckBox_Checked"/>
-        <TextBlock Name="_textBlock" Grid.Row="2" Grid.Column="0" FontSize="20" TextWrapping="Wrap" />
-        <Label Content="Accuracy" Grid.Row="3" Grid.Column="0"/>
-        <Label Name="_accuracyLabel" Grid.Row="3" Grid.Column="1"/>
+        <Label Content="Gesture confidence:" Grid.Row="3" Grid.Column="0"/>
+        <Label x:Name="AccuracyLabel" Grid.Row="3" Grid.Column="1"/>
+        
+        <Label Content="Speech:" Grid.Row="4" Grid.Column="0"/>
+        <Label Name="SpeechText" Grid.Row="4" Grid.Column="1"/>
     </Grid>
 </Window>

@@ -12,6 +12,16 @@ namespace ConfeeDemoWPF
 {
     class GestureDatabase
     {
+        private readonly List<Gesture> _inputGestures = new List<Gesture>();
+        private readonly Random _random = new Random();
+        private readonly string _databaseDirectory;
+        private const string _fileExtension = ".raw";
+        private readonly int _frameWidth;
+        private readonly int _frameHeight;
+        private readonly int _frameSize;
+        private LinkedList<GestureCacheEntry> _gestureCache = new LinkedList<GestureCacheEntry>();
+        private const int _maxCacheSize = 30;
+
         public class GestureFrame
         {
             public int FrameId;
@@ -24,7 +34,7 @@ namespace ConfeeDemoWPF
             public List<GestureFrame> Frames;
         }
 
-        public class GestureOccurence
+        public class GestureOccurrence
         {
             public Gesture GestureType;
             public double MatchValue;
@@ -50,7 +60,6 @@ namespace ConfeeDemoWPF
             LoadDatabase();
         }
 
-        //
         private void LoadDatabase()
         {
             int nextId = 1;
@@ -106,7 +115,7 @@ namespace ConfeeDemoWPF
             SaveGesture(dataPointer, gestureName, _random.Next().ToString());
         }
 
-        public GestureOccurence MatchGesture(Mat inputImage, GestureType type)
+        public GestureOccurrence MatchGesture(Mat inputImage, GestureType type)
         {
             Gesture bestMatch = null;
             var bestMatchValue = double.MaxValue;
@@ -160,7 +169,7 @@ namespace ConfeeDemoWPF
                 }
             }
 
-            return new GestureOccurence
+            return new GestureOccurrence
             {
                 GestureType = bestMatch,
                 MatchValue = bestMatchValue,
@@ -205,15 +214,5 @@ namespace ConfeeDemoWPF
             CvInvoke.AbsDiff(m1, m2, workingMat);
             return CvInvoke.Sum(workingMat).V0;
         }
-
-        private List<Gesture> _inputGestures = new List<Gesture>();
-        private Random _random = new Random();
-        private string _databaseDirectory;
-        private const string _fileExtension = ".raw";
-        private int _frameWidth;
-        private int _frameHeight;
-        private int _frameSize;
-        private LinkedList<GestureCacheEntry> _gestureCache = new LinkedList<GestureCacheEntry>();
-        private const int _maxCacheSize = 30;
     }
 }
