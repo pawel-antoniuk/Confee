@@ -19,7 +19,7 @@ namespace ConfeeDemoWPF
         public IntPtr GestureImagePointer { get; set; }
         public ulong TrackingId { get; set; }
         public bool IsEventCaptured { get; set; }
-        public double Accuracy { get; set; }
+        public double Confidence { get; set; }
     }
 
     public class PreviewFrameArrivedArgs
@@ -56,15 +56,17 @@ namespace ConfeeDemoWPF
             public Mat LefttHandFrame;
         }
 
-        public int DepthFrameWidth => 128;
-        public int DepthFrameHeight => 128;
 
         private readonly CoordinateMapper _coordinateMapper;
         private readonly KinectSensor _kinectSensor;
         //private GestureDatabase _gestureDatabase; //old version
         private readonly GestureClassifier _classifier;
         private string _lastGestureName = "";
-        private readonly double[] _gestureDensity;
+        private readonly double[] _gestureConfidenceTable;
+        private Mutex _inputFrameMutex = new Mutex();
+
+            public int DepthFrameWidth => 128;
+        public int DepthFrameHeight => 128;
 
         public event EventHandler<GestureRecognizedArgs> GestureRecognized;
         public event EventHandler<PreviewFrameArrivedArgs> PreviewFrameArrived;
@@ -82,7 +84,7 @@ namespace ConfeeDemoWPF
 
             _classifier = GestureClassifier.Load(databasePath + "\\classifier.bin");
 
-            _gestureDensity = new double[_classifier.Labels.Count];
+            _gestureConfidenceTable = new double[_classifier.Labels.Count];
 
             //_gestureDatabase = new GestureDatabase(databasePath, DepthFrameWidth, DepthFrameHeight); //old version
         }
@@ -287,7 +289,7 @@ namespace ConfeeDemoWPF
                     RightHandFrame = frame.RightHandFrame.DataPointer,
                     LeftHandFrame = frame.LefttHandFrame.DataPointer
                 };
-                PreviewFrameArrived(this, previewFrameArrivedArgs);
+                PreviewFrameArrived?.BeginInvoke(this, previewFrameArrivedArgs, null, null);
 
                 //var bestMatch = _gestureDatabase.MatchGesture(frame.RightHandFrame, GestureDatabase.GestureType.RightHand); //old version
 
@@ -296,54 +298,40 @@ namespace ConfeeDemoWPF
                 var classifiedLabel = _classifier.Classify(classifierFrame);
 
 
-                _gestureDensity[classifiedLabel.Id] += 1;
+                _gestureConfidenceTable[classifiedLabel.Id] += 1;
 
-                double maxDensity = 0;
+                double bestConfidence = 0;
                 var maxDensityIndex = 0;
 
-                for (var i = 0; i < _gestureDensity.Length; ++i)
+                for (var i = 0; i < _gestureConfidenceTable.Length; ++i)
                 {
-                    _gestureDensity[i] *= 0.8;
+                    _gestureConfidenceTable[i] *= 0.8;
 
-                    if (!(_gestureDensity[i] > maxDensity)) continue;
-                    maxDensity = _gestureDensity[i];
+                    if (!(_gestureConfidenceTable[i] > bestConfidence)) continue;
+                    bestConfidence = _gestureConfidenceTable[i];
                     maxDensityIndex = i;
                 }
 
                 var bestMatchGestureName = _classifier.Labels[maxDensityIndex];
 
-                //old version
-                /*if (bestMatch == null || bestMatch.GestureType == null) return;
-                if (_lastGestureName != bestMatch.GestureType.Name)
+                _inputFrameMutex.WaitOne();
+                if (_lastGestureName == bestMatchGestureName)
                 {
-                    var args = new GestureRecognizedArgs
-                    {
-                        GestureName = bestMatch.GestureType.Name,
-                        GestureImagePointer = frame.RightHandFrame,
-                        TrackingId = trackedBodyId,
-                        IsEventCaptured = false,
-                    };
-                    GestureRecognized(this, args);
-                    if (args.IsEventCaptured)
-                    {
-                        _lastGestureName = bestMatch.GestureType.Name;
-                    }
-                }*/
+                    _inputFrameMutex.ReleaseMutex();
+                    return;
+                }
+                _lastGestureName = bestMatchGestureName;
+                _inputFrameMutex.ReleaseMutex();
 
-                if (_lastGestureName == bestMatchGestureName) return;
                 var args = new GestureRecognizedArgs
                 {
                     GestureName = bestMatchGestureName,
                     GestureImagePointer = frame.RightHandFrame,
                     TrackingId = trackedBodyId,
                     IsEventCaptured = false,
-                    Accuracy = maxDensity,
+                    Confidence = bestConfidence,
                 };
-                GestureRecognized(this, args);
-                if (args.IsEventCaptured)
-                {
-                    _lastGestureName = bestMatchGestureName;
-                }
+                GestureRecognized?.BeginInvoke(this, args, null, null);
             });
         }
     }

@@ -18,6 +18,7 @@ using Windows.Media.SpeechSynthesis;
 using Windows.Networking;
 using Windows.Networking.Sockets;
 using Windows.UI.Core;
+using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -35,8 +36,7 @@ namespace Confee
         private MediaCapture _mediaCapture = null;
         private MediaFrameReader _frameReader = null;
         private SoftwareBitmap _colorCamerViewBackBuffer = null;
-        private StreamSocket _client = null;
-        private byte[] _readBuffer = new byte[64];
+        private KinectBridgeClient _kinectBridgeClient = null;
 
         public MainPage()
         {
@@ -45,21 +45,25 @@ namespace Confee
             _colorCamerViewBackBuffer = new SoftwareBitmap(BitmapPixelFormat.Yuy2, 1920, 1080);
             _colorCameraView.Source = new SoftwareBitmapSource();
 
-            new Task(async delegate
-            {
-                _client = new StreamSocket();
-                await _client.ConnectAsync(new HostName("127.0.0.1"), "6667");
-                while (true)
-                {
-                    var len = await _client.InputStream.AsStreamForRead().ReadAsync(_readBuffer, 0, _readBuffer.Length);
-                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, delegate
-                    {
-                        var msg = Encoding.UTF8.GetString(_readBuffer, 0, len);
-                        _speechBalloon.Text += msg + " ";
-                    });
-                }
-            }).Start();
+            _kinectBridgeClient = new KinectBridgeClient(6667);
+            _kinectBridgeClient.OnMessageReceived += _kinectBridgeClient_OnMessageReceived;
+            _kinectBridgeClient.BeginListen();
 
+            CreateFrameReaderAsync();
+        }
+
+        private void _kinectBridgeClient_OnMessageReceived(object sender, string msg)
+        {
+#pragma warning disable CS4014
+            Dispatcher.RunAsync(CoreDispatcherPriority.Normal, delegate
+            {
+                _speechBalloon.Text += msg + " ";
+            });
+#pragma warning restore CS4014
+        }
+
+        private void CreateFrameReaderAsync()
+        {
             new Task(async delegate
             {
                 var frameSourceGroups = await MediaFrameSourceGroup.FindAllAsync();
@@ -71,8 +75,12 @@ namespace Confee
                 {
                     foreach (var sourceInfo in sourceGroup.SourceInfos)
                     {
-                        if (sourceInfo.MediaStreamType != MediaStreamType.VideoRecord ||
-                            sourceInfo.SourceKind != MediaFrameSourceKind.Color) continue;
+                        if (sourceInfo.DeviceInformation.Name != "Kinect V2 Video Sensor" ||
+                            sourceInfo.MediaStreamType != MediaStreamType.VideoRecord ||
+                            sourceInfo.SourceKind != MediaFrameSourceKind.Color)
+                        {
+                            continue;
+                        }
                         colorSourceInfo = sourceInfo;
                         break;
                     }
@@ -81,29 +89,38 @@ namespace Confee
                     break;
                 }
 
-                var settings = new MediaCaptureInitializationSettings()
-                {
-                    SourceGroup = selectedGroup,
-                    SharingMode = MediaCaptureSharingMode.ExclusiveControl,
-                    MemoryPreference = MediaCaptureMemoryPreference.Cpu,
-                    StreamingCaptureMode = StreamingCaptureMode.Video
-                };
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                    async () =>
+                    {
+                        if (selectedGroup == null)
+                        {
+                            var messageDialog = new MessageDialog("No ready Kinect V2 found!");
+                            var okCommand = new UICommand("Ok", cmd => Application.Current.Exit());
+                            messageDialog.Commands.Add(okCommand);
+                            await messageDialog.ShowAsync();
+                        }
 
-                _mediaCapture = new MediaCapture();
-                await _mediaCapture.InitializeAsync(settings);
+                        var settings = new MediaCaptureInitializationSettings()
+                        {
+                            SourceGroup = selectedGroup,
+                            SharingMode = MediaCaptureSharingMode.ExclusiveControl,
+                            MemoryPreference = MediaCaptureMemoryPreference.Cpu,
+                            StreamingCaptureMode = StreamingCaptureMode.Video
+                        };
 
-                var colorFrameSource = _mediaCapture.FrameSources[colorSourceInfo.Id];
-                var preferredFormat = colorFrameSource.SupportedFormats.FirstOrDefault();
+                        _mediaCapture = new MediaCapture();
+                        await _mediaCapture.InitializeAsync(settings);
 
-                await colorFrameSource.SetFormatAsync(preferredFormat);
+                        var colorFrameSource = _mediaCapture.FrameSources[colorSourceInfo.Id];
+                        var preferredFormat = colorFrameSource.SupportedFormats.FirstOrDefault();
 
-                _frameReader = await _mediaCapture.CreateFrameReaderAsync(colorFrameSource, MediaEncodingSubtypes.Yuy2);
-                _frameReader.FrameArrived += FrameArrivedAsync;
-                await _frameReader.StartAsync();
+                        await colorFrameSource.SetFormatAsync(preferredFormat);
+
+                        _frameReader = await _mediaCapture.CreateFrameReaderAsync(colorFrameSource, MediaEncodingSubtypes.Yuy2);
+                        _frameReader.FrameArrived += FrameArrivedAsync;
+                        await _frameReader.StartAsync();
+                    });
             }).Start();
-
-            //var sr = new SpeechRecognizer();
-           // sr.Setup();
         }
 
         private void _datagramSocket_MessageReceived(DatagramSocket sender,

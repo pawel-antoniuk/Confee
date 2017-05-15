@@ -28,11 +28,12 @@ namespace ConfeeDemoWPF
         private readonly MultiSourceFrameReader _reader;
         private readonly WriteableBitmap _rightHandBitmapSource;
         private readonly WriteableBitmap _leftHandBitmapSource;
-        private WriteableBitmap _rightHandColorBitmapSource;
-        private WriteableBitmap _leftHandColorBitmapSource;
+        private readonly WriteableBitmap _rightHandColorBitmapSource;
+        private readonly WriteableBitmap _leftHandColorBitmapSource;
         private readonly CoordinateMapper _coordinateMapper;
         private readonly GestureRecognizer _gestureRecognizer;
         private readonly SpeechRecognizer _speechRecognizer;
+        private readonly KinectBridgeServer _kinectBridgeServer;
 
         private int _colorViewWidth = 256;
         private int _colorViewHeight = 256;
@@ -41,15 +42,13 @@ namespace ConfeeDemoWPF
         private Random _random = new Random();
         private readonly SpeechSynthesizer _synth = new SpeechSynthesizer();
 
-        private readonly Socket _client;
+        
 
         public MainWindow()
         {
             InitializeComponent();
 
-            var listener = new TcpListener(IPAddress.Any, 6667);
-            listener.Start();
-            _client = listener.AcceptSocket();
+            _kinectBridgeServer = new KinectBridgeServer(6667);
 
             _kinect = KinectSensor.GetDefault();
             _coordinateMapper = _kinect.CoordinateMapper;
@@ -105,16 +104,15 @@ namespace ConfeeDemoWPF
                 if (_snapNextTime)
                 {
                     _snapNextTime = false;
-                    //old version
                     //_gestureRecognizer.GestureDatabase.SaveGesture(args.RightHandFrame, "debug");
-                    var libraryPath = @"..\..\..\..\Gestures\gestures2";
+                    var libraryPath = @"..\..\..\..\Gestures\gestures";
                     var label = _labelTextBox.Text;
                     BitmapLoader.SaveInLibrary(libraryPath, label, args.RightHandFrame,
                         _gestureRecognizer.DepthFrameWidth, _gestureRecognizer.DepthFrameHeight,
                         _gestureRecognizer.DepthFrameWidth, PixelFormat.Format8bppIndexed);
                 }
 
-                // draw preview data
+                // draw preview frame
                 var imageWidth = _gestureRecognizer.DepthFrameWidth;
                 var imageHeight = _gestureRecognizer.DepthFrameHeight;
                 var imageSize = imageWidth * imageHeight;
@@ -131,59 +129,11 @@ namespace ConfeeDemoWPF
             }));
         }
 
-        //private Timer _gestureRecognizedTimer = null;
-        //private const string _textToSpeach = "Hello,My,Name is,P,A,W,E,L,Ok";
-        //private int _wordIndex = 100;
-        //private DateTime _lastGestureRecognizedTime;
-        //private bool _isSpeechCompleted = true;
-
         private async void OnGestureRecognized(object e, GestureRecognizedArgs args)
         {
-            //old
-            /*var words = _textToSpeach.Split(',');
-            if (_wordIndex < words.Length)
-            {
-                if (DateTime.Now.Subtract(_lastGestureRecognizedTime).TotalMilliseconds < 300)//
-                {
-                    return;
-                }
-
-                _lastGestureRecognizedTime = DateTime.Now;
-
-                if (args.GestureName != words[_wordIndex])
-                {
-                    return;
-                }
-
-                if(args.GestureName == "Ok")
-                {
-                    args.GestureName = "Pawel";
-                }
-
-                ++_wordIndex;               
-            }*/
-
-
             args.IsEventCaptured = true;
-
-            var msg = Encoding.UTF8.GetBytes(args.GestureName.ToLower());
-            _client.Send(msg);
+            _kinectBridgeServer.BroadcastMessage(args.GestureName.ToLower());
             System.Diagnostics.Debug.Print("{0} gesture recognized", args.GestureName);
-
-            /* if (_gestureRecognizedTimer != null && _gestureRecognizedTimer.Enabled)
-             {
-                 _gestureRecognizedTimer.Stop();
-             }*/
-
-            /*gestureRecognizedTimer = new Timer(_wordIndex < words.Length ? 1 : 200);
-            _gestureRecognizedTimer.Elapsed += delegate
-            {
-                // speak gesture name
-                _synth.SpeakAsyncCancelAll();
-                _synth.SpeakAsync(args.GestureName);
-            };
-            _gestureRecognizedTimer.AutoReset = false;
-            _gestureRecognizedTimer.Enabled = true;*/
 
             _synth.SpeakAsyncCancelAll();
             _synth.SpeakAsync(args.GestureName);
@@ -191,7 +141,7 @@ namespace ConfeeDemoWPF
             await Dispatcher.BeginInvoke(new Action(() =>
             {
                 TextBlock.Text = args.GestureName;
-                AccuracyLabel.Content = args.Accuracy.ToString("F");
+                AccuracyLabel.Content = args.Confidence.ToString("F");
             }));
         }
 
@@ -265,10 +215,10 @@ namespace ConfeeDemoWPF
                 _gestureRecognizer.InputFrames(depthFrame, trackedBody);
 
                 // draw color frames
-                /*var rightHandJoint = trackedBody.Joints.Single(s => s.Key == JointType.HandRight).Value;
+                var rightHandJoint = trackedBody.Joints.Single(s => s.Key == JointType.HandRight).Value;
                 var leftHandJoint = trackedBody.Joints.Single(s => s.Key == JointType.HandLeft).Value;
                 DrawJointNearestArea(rightHandJoint, colorFrame, _rightHandColorBitmapSource);
-                DrawJointNearestArea(leftHandJoint, colorFrame, _leftHandColorBitmapSource);*/
+                DrawJointNearestArea(leftHandJoint, colorFrame, _leftHandColorBitmapSource);
             }
             finally
             {
